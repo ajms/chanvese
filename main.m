@@ -13,7 +13,7 @@ close all;
 %    u0 = double(rgb2gray(RGB));
 %end
 
-RGB = imread('/home/albert/Documents/Uni/ProjNat/LevelSet/test_images/test2.jpg');
+RGB = imread('/home/albert/Dropbox/Uni/ProjNat/LevelSet/test_images/test2.jpg');
 u0 = double(rgb2gray(RGB));
 
 %u0 = 255*ones(100, 100);
@@ -25,7 +25,7 @@ h = 1.0;
 dt = 0.05;
 lambda1 = 1;
 lambda2 = 15;
-mu = 0.5*255^2;
+mu = 1;
 nu = 0;
 doreinit = 0;
 [M, N] = size(u0);
@@ -64,8 +64,8 @@ for i=1:200
     zlabel('\phi^n(x, y)');
     
     pause(0.1);
-    
-    phi_n = levelset(phi, u0, lambda1, lambda2, mu, nu, dt, h, doreinit);
+    fprintf('Iteration: %d\n',i);
+    phi_n = chlevelset(phi, u0, lambda1, lambda2, mu, nu, dt, h);
     
     % Stopping condition
     dphi = norm(phi_n - phi, Inf);
