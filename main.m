@@ -1,4 +1,4 @@
-%clear all;
+clear all;
 close all;
 
 %[FileName, PathName, FilterIndex] = uigetfile('*', 'Select image');
@@ -22,9 +22,9 @@ u0 = double(rgb2gray(RGB));
 figure('Position', [100 150 300 500])
 
 h = 1.0;
-dt = 0.05;
+dt = 0.5;
 lambda1 = 1;
-lambda2 = 15;
+lambda2 = 1;
 mu = 1;
 nu = 0;
 doreinit = 0;
