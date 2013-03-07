@@ -1,29 +1,29 @@
 clear all;
 close all;
 
-%[FileName, PathName, FilterIndex] = uigetfile('*', 'Select image');
-%filename = strcat(PathName, FileName);
-%[pathstr, name, ext] = fileparts(filename);
+[FileName, PathName, FilterIndex] = uigetfile('*', 'Select image');
+filename = strcat(PathName, FileName);
+[pathstr, name, ext] = fileparts(filename);
 
-%if strcmpi(ext, '.mat')
-%    S = load(filename);
-%    u0 = S.I;
-%else
-%    RGB = imread(filename);
-%    u0 = double(rgb2gray(RGB));
-%end
+if strcmpi(ext, '.mat')
+    S = load(filename);
+    u0 = S.I;
+else
+    RGB = imread(filename);
+    u0 = double(rgb2gray(RGB));
+end
 
-RGB = imread('/home/albert/Dropbox/Uni/ProjNat/LevelSet/test_images/test2.jpg');
-u0 = double(rgb2gray(RGB));
+%RGB = imread('/home/albert/Dropbox/Uni/ProjNat/LevelSet/test_images/test2.jpg');
+%u0 = double(rgb2gray(RGB));
 
 figure('Position', [100 150 300 500])
 
 % parameters
 h = 1.0;
-dt = 0.5;
+dt = 0.1;
 lambda1 = 1;
 lambda2 = 1;
-mu = 0.1*255^2;
+mu = 1;%0.05*255^2;
 nu = 0;
 doreinit = 0;
 [M, N] = size(u0);
@@ -36,7 +36,7 @@ Z = (X-50).^2 + (Y-50).^2;
 phi(Z <= 10^2) = 1;
 
 % Initialise phi_0 as a rectangle
-%phi(45:55, 45:55) = 1;
+%phi(5:15, 5:15) = 1;
 
 % Initialize to a signed distance function
 phi = reinit(phi);
@@ -67,11 +67,10 @@ for i=1:200
     
     % Stopping condition
     dphi = norm(phi_n - phi, Inf);
-    if dphi < h || abs(dphi-tempdphi) < 0.1
+    if dphi < 10*h || abs(dphi-tempdphi) < 0.1
         fprintf('Stopping @ iteration %d\n', i);
         break;
     end
-    
     phi = phi_n;
     tempdphi = dphi;
 end
