@@ -19,11 +19,11 @@ u0 = double(rgb2gray(RGB));
 figure('Position', [100 150 300 500])
 
 % parameters
-h = 1;
+h = 1.0;
 dt = 0.5;
 lambda1 = 1;
 lambda2 = 1;
-mu = 0;
+mu = 0.1*255^2;
 nu = 0;
 doreinit = 0;
 [M, N] = size(u0);

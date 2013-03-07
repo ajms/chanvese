@@ -26,7 +26,7 @@ A = sparse(diag(E(1:end),0)) + sparse(diag(D(1:end-1),1)) + sparse(diag(D(2:end)
 u0L = reshape(u0(2:end-1,2:end-1),m^2,1);
 [c1 c2] = avg_intensity(phi_n, u0, h);
 
-b = reshape(phi_n(2:end-1,2:end-1),m^2,1)/dt + nu*ones(m^2,1) + lambda1*(u0L-c1).^2 - lambda2*(u0L-c2).^2;
+b = -reshape(phi_n(2:end-1,2:end-1),m^2,1)/dt + reshape(drac(phi_n(2:end-1,2:end-1),h),m^2,1).*(nu*ones(m^2,1) + lambda1*(u0L-c1).^2 - lambda2*(u0L-c2).^2);
 
 for k=0:m-1
     A(k*m+1,k*m+1) = A(k*m+1,k*m+1) + 4/3 * D(k*m+1); % Left boundary:
