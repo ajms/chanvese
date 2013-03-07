@@ -16,28 +16,26 @@ close all;
 RGB = imread('/home/albert/Dropbox/Uni/ProjNat/LevelSet/test_images/test2.jpg');
 u0 = double(rgb2gray(RGB));
 
-%u0 = 255*ones(100, 100);
-%u0(30:50, 40:50) = 0;
-
 figure('Position', [100 150 300 500])
 
-h = 1.0;
+% parameters
+h = 1;
 dt = 0.5;
 lambda1 = 1;
 lambda2 = 1;
-mu = 1;
+mu = 0;
 nu = 0;
 doreinit = 0;
 [M, N] = size(u0);
 
 phi = -ones(M, N);
 
-% Circle
+% Initialise phi_0 as a circle
 [X Y] = meshgrid(1:M);
 Z = (X-50).^2 + (Y-50).^2; 
 phi(Z <= 10^2) = 1;
 
-% Rectangle
+% Initialise phi_0 as a rectangle
 %phi(45:55, 45:55) = 1;
 
 % Initialize to a signed distance function
