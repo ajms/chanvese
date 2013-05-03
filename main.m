@@ -3,24 +3,24 @@ close all;
 
 
 
-
+%{
 filename = '/home/albert/Dropbox/Uni/Bachelorprojekt/LOL/medical_images/images1.mat';
 
 S = load(filename);
 I = S.I;
-
-%filename = '/home/albert/Dropbox/Uni/Bachelorprojekt/LOL/test_images/test2.jpg';
-%RGB = imread(filename);
-%I = double(rgb2gray(RGB));
+%}
+filename = '/home/albert/Dropbox/Uni/Bachelorprojekt/LOL/test_images/test2.jpg';
+RGB = imread(filename);
+I = double(rgb2gray(RGB));
 
 figure('Position', [100 150 300 500])
 
 % parameters
 h = 1.0;
-dt = 0.1;
+dt = 0.5;
 lambda1 = 1;
 lambda2 = 1;
-mu = 0;%0.5*255^2;
+mu = 0.5*255^2;
 nu = 0;%200;
 doreinit = 0;
 [M, N] = size(I);
@@ -29,8 +29,8 @@ phi = -ones(M+2, N+2);
 
 % Initialise phi_0 as a circle
 [X Y] = meshgrid(1:M+2);
-Z = (X-50).^2 + (Y-50).^2; 
-phi(Z <= 30^2) = 1;
+Z = (X-floor(M/2)).^2 + (Y-floor(N/2)).^2; 
+phi(Z <= 40^2) = 1;
 
 % Initialise phi_0 as a rectangle
 %phi(5:15, 5:15) = 1;
@@ -49,7 +49,6 @@ for i=1:600
     [C H] = contour(phi_n(2:end-1,2:end-1), [0 0], 'r');
     set(H, 'LineWidth', 3);
     axis tight;
-    colormap gray;
     xlabel('x');
     ylabel('y');
     hold off;
@@ -71,7 +70,12 @@ for i=1:600
         break;
     end
     tempphi = phi_n;
-    phi = init(phi_n);
+    if i>=1
+        phi = init(phi_n);
+        re = phi_n;
+    else
+        phi = phi_n;
+    end
     tempdphi = dphi;
 end
 

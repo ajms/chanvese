@@ -13,6 +13,9 @@ function [ phi_nn ] = chlevelset( phi_n, I, lambda1, lambda2, mu, nu, dt, h )
 zeta = 1./sqrt(((phi_n(2:end, 2:end-1) - phi_n(1:end-1,2:end-1)).^2/h^2 + (phi_n(1:end-1,3:end)-phi_n(1:end-1,1:end-2)).^2)./(2*h)^2);
 eta = 1./sqrt(((phi_n(2:end-1,2:end)-phi_n(2:end-1,1:end-1)).^2/h^2 + (phi_n(3:end,1:end-1)-phi_n(1:end-2,1:end-1)).^2)./(2*h)^2);
 
+%zeta = (abs(zeta)>0.001).*zeta + (abs(zeta)<=0.001).*0.001;
+%eta = (abs(eta)>0.001).*eta + (abs(eta)<=0.001).*0.001;
+
 % A,B,C,D,E are the entries of the matrix for the system to solve.
 diracphi = drac(phi_n(2:end-1,2:end-1),h);
 A = -mu*diracphi.*zeta(2:end,1:end)./h^2;
@@ -46,7 +49,7 @@ end
 
 % Solve linear system.bicgstab
 phi_nn = zeros(M+2,N+2);
-phi_nn(2:end-1,2:end-1) = reshape(bicgstab(P,b(:)),M,N);
+phi_nn(2:end-1,2:end-1) = reshape(P\b(:),M,N);
 
 % Add boundary to n+1'st timestep
 phi_nn(1,:) = 4/3*phi_nn(2,:) - 1/3*phi_nn(3,:);
