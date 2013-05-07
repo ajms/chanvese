@@ -1,27 +1,27 @@
 clear all;
 close all;
 
+[FileName, PathName, FilterIndex] = uigetfile('*', 'Select image');
+filename = strcat(PathName, FileName);
+[pathstr, name, ext] = fileparts(filename);
+if strcmpi(ext, '.mat')
+    S = load(filename);
+    I = S.I;
+else
+    RGB = imread(filename);
+    I = double(rgb2gray(RGB));
+end
 
-
-%{
-filename = '/home/albert/Dropbox/Uni/Bachelorprojekt/LOL/medical_images/images1.mat';
-
-S = load(filename);
-I = S.I;
-%}
-filename = '/home/albert/Dropbox/Uni/Bachelorprojekt/LOL/test_images/test2.jpg';
-RGB = imread(filename);
-I = double(rgb2gray(RGB));
-
+I = real(ifftn(scalen(fftn(I),[10,10],[0,0])));
 figure('Position', [100 150 300 500])
 
 % parameters
 h = 1.0;
-dt = 0.5;
+dt = 1;
 lambda1 = 1;
 lambda2 = 1;
-mu = 0.5*255^2;
-nu = 0;%200;
+mu = 2*255^2;
+nu = 0;
 doreinit = 0;
 [M, N] = size(I);
 
@@ -30,16 +30,13 @@ phi = -ones(M+2, N+2);
 % Initialise phi_0 as a circle
 [X Y] = meshgrid(1:M+2);
 Z = (X-floor(M/2)).^2 + (Y-floor(N/2)).^2; 
-phi(Z <= 40^2) = 1;
-
-% Initialise phi_0 as a rectangle
-%phi(5:15, 5:15) = 1;
+phi(Z <= 20^2) = 1;
 
 % Initialize to a signed distance function
 phi = init(phi);
 tempdphi = 5000;
 tempphi = zeros(M+2,N+2);
-for i=1:600
+for i=1:100
     fprintf('Iteration: %d\n',i);
     phi_n = chlevelset(phi, I, lambda1, lambda2, mu, nu, dt, h);
     
@@ -54,7 +51,7 @@ for i=1:600
     hold off;
     
     subplot(2,1,2);
-    surf(1:M, 1:N, phi_n(2:end-1,2:end-1), 'EdgeColor', 'none');
+    surf(phi_n(2:end-1,2:end-1), 'EdgeColor', 'none');
     axis tight;
     xlabel('x');
     ylabel('y');
@@ -65,17 +62,20 @@ for i=1:600
     dphi = norm(phi_n - tempphi);
     ddphi = abs(dphi-tempdphi);
     fprintf('Difference in phi: %f, %f\n',dphi,ddphi);
-    if dphi < 0.1 ||  ddphi< 0.1*dt
+    if dphi < 0.01 ||  ddphi< 0.01*dt
         fprintf('Stopping @ iteration %d\n', i);
         break;
     end
     tempphi = phi_n;
-    if i>=1
+    %{
+    if i>=29
         phi = init(phi_n);
         re = phi_n;
     else
         phi = phi_n;
     end
+    %}
+    phi = phi_n;
     tempdphi = dphi;
 end
 

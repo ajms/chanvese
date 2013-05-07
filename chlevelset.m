@@ -12,9 +12,9 @@ function [ phi_nn ] = chlevelset( phi_n, I, lambda1, lambda2, mu, nu, dt, h )
 % zeta and xi determine the gradient of phi.
 zeta = 1./sqrt(((phi_n(2:end, 2:end-1) - phi_n(1:end-1,2:end-1)).^2/h^2 + (phi_n(1:end-1,3:end)-phi_n(1:end-1,1:end-2)).^2)./(2*h)^2);
 eta = 1./sqrt(((phi_n(2:end-1,2:end)-phi_n(2:end-1,1:end-1)).^2/h^2 + (phi_n(3:end,1:end-1)-phi_n(1:end-2,1:end-1)).^2)./(2*h)^2);
-
-%zeta = (abs(zeta)>0.001).*zeta + (abs(zeta)<=0.001).*0.001;
-%eta = (abs(eta)>0.001).*eta + (abs(eta)<=0.001).*0.001;
+small = 1;
+zeta = (abs(zeta)<=small).*zeta + (abs(zeta)>small).*small.*sign(zeta);
+eta = (abs(eta)<=small).*eta + (abs(eta)>small).*small.*sign(eta);
 
 % A,B,C,D,E are the entries of the matrix for the system to solve.
 diracphi = drac(phi_n(2:end-1,2:end-1),h);
@@ -32,29 +32,34 @@ P = spdiags(transpose([[0,A(1:end-1)];[zeros(1,M),B(1:end-M)];[C(2:end),0];[D(M+
 
 b = phi_n(2:end-1,2:end-1)/dt + diracphi.*(-nu*ones(M,N) - lambda1*(I-c1).^2 + lambda2*(I-c2).^2);
 
+
 for k=0:N-1
-    P(k*N+1,k*N+1) = P(k*N+1,k*N+1) + 4/3 * C(k*N+1); % Left boundary:
-    P(k*N+1,k*N+2) = P(k*N+1,k*N+2) - 1/3 * C(k*N+1); % Forward approximation
-    P((k+1)*N,(k+1)*N) = P((k+1)*N,(k+1)*N) + 4/3 * A((k+1)*N); % Right boundary:
-    P((k+1)*N,(k+1)*N-1) = P((k+1)*N,(k+1)*N-1) - 1/3 * A((k+1)*N); % Backward approxiNation
-    P(k+1,k+1) = P(k+1,k+1) + 4/3 * D((k+1)*N); % Buttom boundary:
-    P(k+2,k+1) = P(k+2,k+1) - 1/3 * D((k+1)*N); % Forward approximation
+    P(k*M+1,k*M+1) = P(k*M+1,k*M+1) + 4/3 * C(k*M+1); % Left boundary:
+    P(k*M+1,k*M+2) = P(k*M+1,k*M+2) - 1/3 * C(k*M+1); % Forward approximation
+    P((k+1)*M,(k+1)*M) = P((k+1)*M,(k+1)*M) + 4/3 * A((k+1)*M); % Right boundary:
+    P((k+1)*M,(k+1)*M-1) = P((k+1)*M,(k+1)*M-1) - 1/3 * A((k+1)*M); % Backward approxiNation
+    if k > 0
+        P(k*M,k*M+1) = 0;
+        P(k*M+1,k*M) = 0;
+    end
+end
+
+for k=0:M-1
+    P(k+1,k+1) = P(k+1,k+1) + 4/3 * D(k+1); % Bottom boundary:
+    P(k+2,k+1) = P(k+2,k+1) - 1/3 * D(k+1); % Forward approximation
     P(end-k,end-k) = P(end-k,end-k) + 4/3 * B(end-k); % Top boundary
     P(end-(k+1),end-k) = P(end-(k+1),end-k) - 1/3 * B(end-k); % Backward approximation
-    if k > 0
-        P(k*N,k*N+1) = 0;
-        P(k*N+1,k*N) = 0;
-    end
 end
 
 % Solve linear system.bicgstab
 phi_nn = zeros(M+2,N+2);
-phi_nn(2:end-1,2:end-1) = reshape(P\b(:),M,N);
+phi_nn(2:end-1,2:end-1) = reshape(gmres(P,b(:)),M,N);
 
 % Add boundary to n+1'st timestep
-phi_nn(1,:) = 4/3*phi_nn(2,:) - 1/3*phi_nn(3,:);
-phi_nn(end,:) = 4/3*phi_nn(end-1,:) - 1/3*phi_nn(end-2,:);
-phi_nn(:,1) = 4/3*phi_nn(:,2) - 1/3*phi_nn(:,3);
-phi_nn(:,end) = 4/3*phi_nn(:,end-1) - 1/3*phi_nn(:,end-2);
+
+phi_nn(1,2:end-1) = 4/3*phi_nn(2,2:end-1) - 1/3*phi_nn(3,2:end-1);
+phi_nn(end,2:end-1) = 4/3*phi_nn(end-1,2:end-1) - 1/3*phi_nn(end-2,2:end-1);
+phi_nn(2:end-1,1) = 4/3*phi_nn(2:end-1,2) - 1/3*phi_nn(2:end-1,3);
+phi_nn(2:end-1,end) = 4/3*phi_nn(2:end-1,end-1) - 1/3*phi_nn(2:end-1,end-2);
 
 end
