@@ -1,6 +1,6 @@
-clear all;
+%clear all;
 close all;
-
+%{
 [FileName, PathName, FilterIndex] = uigetfile('*', 'Select image');
 filename = strcat(PathName, FileName);
 [pathstr, name, ext] = fileparts(filename);
@@ -13,16 +13,16 @@ else
 end
 
 I = real(ifftn(scalen(fftn(I),[10,10],[0,0])));
+%}
 figure('Position', [100 150 300 500])
 
 % parameters
 h = 1.0;
-dt = 1;
+dt = 0.1;
 lambda1 = 1;
 lambda2 = 1;
-mu = 2*255^2;
+mu = 0.4*255^2;
 nu = 0;
-doreinit = 0;
 [M, N] = size(I);
 
 phi = -ones(M+2, N+2);
@@ -36,6 +36,8 @@ phi(Z <= 20^2) = 1;
 phi = init(phi);
 tempdphi = 5000;
 tempphi = zeros(M+2,N+2);
+dphi = zeros(100,1);
+ddphi = zeros(100,1);
 for i=1:100
     fprintf('Iteration: %d\n',i);
     phi_n = chlevelset(phi, I, lambda1, lambda2, mu, nu, dt, h);
@@ -59,24 +61,14 @@ for i=1:100
     pause(0.1);
     
     % Stopping condition, print timesteps. Procent of max value
-    dphi = norm(phi_n - tempphi);
-    ddphi = abs(dphi-tempdphi);
-    fprintf('Difference in phi: %f, %f\n',dphi,ddphi);
-    if dphi < 0.01 ||  ddphi< 0.01*dt
-        fprintf('Stopping @ iteration %d\n', i);
+    dphi(i+1) = norm(phi_n(2:end-1,2:end-1) - phi(2:end-1,2:end-1));
+    ddphi(i+1) = abs(dphi(i+1)-dphi(i));
+    fprintf('Difference in phi: %f, %f\n',dphi(i+1),ddphi(i+1));
+    if dphi(i+1) < 0.1*h ||  ddphi(i+1) < 0.01*h
+        fprintf('Stopping @ iteration %d\n', i-1);
         break;
     end
-    tempphi = phi_n;
-    %{
-    if i>=29
-        phi = init(phi_n);
-        re = phi_n;
-    else
-        phi = phi_n;
-    end
-    %}
     phi = phi_n;
-    tempdphi = dphi;
 end
 
 %set(gcf, 'PaperPositionMode', 'auto');
