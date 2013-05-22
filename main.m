@@ -1,75 +1,86 @@
-%clear all;
 close all;
-%{
-[FileName, PathName, FilterIndex] = uigetfile('*', 'Select image');
-filename = strcat(PathName, FileName);
-[pathstr, name, ext] = fileparts(filename);
-if strcmpi(ext, '.mat')
-    S = load(filename);
-    I = S.I;
-else
-    RGB = imread(filename);
-    I = double(rgb2gray(RGB));
-end
-
-I = real(ifftn(scalen(fftn(I),[10,10],[0,0])));
-%}
-figure('Position', [100 150 300 500])
 
 % parameters
-h = 1.0;
-dt = 0.1;
+no = '8';
+maxit = 60;
+h = 1;
+dt = 0.5;
 lambda1 = 1;
 lambda2 = 1;
-mu = 0.4*255^2;
+mu = 0.1*255^2;
 nu = 0;
+k = 100;
+l = 0.5*10^5;
+m = 30;
 [M, N] = size(I);
 
 phi = -ones(M+2, N+2);
 
 % Initialise phi_0 as a circle
 [X Y] = meshgrid(1:M+2);
-Z = (X-floor(M/2)).^2 + (Y-floor(N/2)).^2; 
-phi(Z <= 20^2) = 1;
+Z = (X-50).^2 + (Y-0).^2; 
+phi(Z <= m^2) = 1;
+
 
 % Initialize to a signed distance function
 phi = init(phi);
-tempdphi = 5000;
-tempphi = zeros(M+2,N+2);
-dphi = zeros(100,1);
-ddphi = zeros(100,1);
-for i=1:100
+
+initial = figure;
+hold on;
+imagesc(I/255);
+colorbar();
+colormap('gray');
+contour(phi(2:end-1,2:end-1), [0 0], 'Color', [1 0 0],'LineWidth',3);
+axis tight;
+print(initial,'-dpsc',strcat('I',no,'initcv.eps'));
+
+dphi = zeros(maxit,1);
+F = zeros(maxit,1);
+
+tic;
+for i=1:maxit
     fprintf('Iteration: %d\n',i);
-    phi_n = chlevelset(phi, I, lambda1, lambda2, mu, nu, dt, h);
-    
-    subplot(2,1,1);
-    imagesc(I);
-    hold on;
-    [C H] = contour(phi_n(2:end-1,2:end-1), [0 0], 'r');
-    set(H, 'LineWidth', 3);
-    axis tight;
-    xlabel('x');
-    ylabel('y');
-    hold off;
-    
-    subplot(2,1,2);
-    surf(phi_n(2:end-1,2:end-1), 'EdgeColor', 'none');
-    axis tight;
-    xlabel('x');
-    ylabel('y');
-    zlabel('\phi^n(x, y)');
-    pause(0.1);
-    
+    [phi_n, F(i+1)] = chlevelset(phi, I, lambda1, lambda2, mu, nu, dt, h);
+
     % Stopping condition, print timesteps. Procent of max value
-    dphi(i+1) = norm(phi_n(2:end-1,2:end-1) - phi(2:end-1,2:end-1));
-    ddphi(i+1) = abs(dphi(i+1)-dphi(i));
-    fprintf('Difference in phi: %f, %f\n',dphi(i+1),ddphi(i+1));
-    if dphi(i+1) < 0.1*h ||  ddphi(i+1) < 0.01*h
-        fprintf('Stopping @ iteration %d\n', i-1);
+    dphi(i) = norm(phi_n(2:end-1,2:end-1) - phi(2:end-1,2:end-1));
+    dF = abs(F(i+1)-F(i));
+    fprintf('Difference in F, difference in phi: %f, %f\n',dF,dphi(i));
+    if dphi(i) < k && dF < l
+        fprintf('Stopping @ iteration %d\n', i);
         break;
     end
     phi = phi_n;
 end
+toc;
 
-%set(gcf, 'PaperPositionMode', 'auto');
-%print('-f1', '-djpeg', strcat(name, '-contour.jpg'));
+
+seg = figure;
+hold on;
+imagesc(I/255);
+colorbar();
+colormap('gray');
+contour(phi(2:end-1,2:end-1), [0 0], 'Color', [1 0 0],'LineWidth',3);
+axis tight;
+hold off;
+print(seg,'-dpsc',strcat('I',no,'segcv.eps'));
+
+Fplot = figure;
+plot(1:sum(F>0),F(F>0));
+set(gca,'xtick',0:1:maxit);
+title('Convergence plot','interpreter','latex','FontSize',15);
+xlabel('Iteration no.','interpreter','latex','FontSize',15);
+ylabel('Value of $F$','interpreter','latex','FontSize',15);
+print(Fplot,'-dpsc',strcat('I',no,'concv.eps'));
+
+phiplot = figure;
+plot(1:sum(dphi>0),dphi(dphi>0));
+set(gca,'xtick',0:1:maxit);
+title('Convergence plot','interpreter','latex','FontSize',15);
+xlabel('Iteration no.','interpreter','latex','FontSize',15);
+ylabel('Difference in $\varphi$','interpreter','latex','FontSize',15);
+print(phiplot,'-dpsc',strcat('I',no,'con2cv.eps'));
+
+inseg = (phi(2:end-1,2:end-1)>=0);
+dev = sum(abs(inseg(:)-Iref(:)))/(M*N);
+fprintf('Deviation in pct. %f\n',dev);
