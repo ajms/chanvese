@@ -5,7 +5,7 @@ I = rgb2gray(imread('/path/to/image.jpg'));
 
 % Parameters
 no = '0'; % number of image for figures
-maxit = 60; % maximal number of iterations
+maxit = 100; % maximal number of iterations
 h = 1; % space step size
 dt = 0.5; % time step size
 lambda1 = 1; % parameter weigting the inner segment
