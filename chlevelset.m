@@ -1,11 +1,18 @@
 function [ phi_nn, F ] = chlevelset( phi_n, I, lambda1, lambda2, mu, nu, dt, h )
 % Update the Level Set function using the Chan-Vese Levelset.
-%   chlevelset(phi_n,u0,lambda1,lambda2,mu,nu,dt,h) returns the n+1'th
-%   timestep of the Level Set. Using the n'th timestep of the Level Set:
-%   phi_n; the weight of exterior and interior: lambda1, lambda2; the
-%   weight of the length of the contour mu; the weight of the area of the 
-%   interior; timestep size dt; space step size h.
-
+%   
+%   [phi_nn,F] = chlevelset(phi_n,u0,lambda1,lambda2,mu,nu,dt,h)
+%   returns the n+1'th timestep of the levelset function.
+%    
+%   Input: 
+%    - phi_n: n'th timestep of the Level Set.
+%    - lambda1, lambda2: the weight of exterior and interior
+%    - mu: the weight of the length of the contour
+%    - nu: the weight of the area of the inner segment
+%    - dt: time step size 
+%    - h: space step size
+    
+    
 % image dimensions.
 [M,N] = size(I);
 
@@ -61,12 +68,11 @@ phi_nn(end,2:end-1) = 4/3*phi_nn(end-1,2:end-1) - 1/3*phi_nn(end-2,2:end-1);
 phi_nn(2:end-1,1) = 4/3*phi_nn(2:end-1,2) - 1/3*phi_nn(2:end-1,3);
 phi_nn(2:end-1,end) = 4/3*phi_nn(2:end-1,end-1) - 1/3*phi_nn(2:end-1,end-2);
 
-% Calculate the value of functional F
+% Calculate the value of the functional F
 Length = sum(sum(diracphi.*sqrt( ((phi_n(3:end, 2:end-1) - phi_n(1:end-2,2:end-1)).^2 + ...
                           (phi_n(2:end-1,3:end) - phi_n(2:end-1,1:end-2)).^2)./(2*h)^2)));
 Area = sum(sum(hside(phi_n(2:end-1,2:end-1),h)));
 Inside = sum(sum((I-c1).^2.*hside(phi_n(2:end-1,2:end-1),h)));
 Outside = sum(sum((I-c2).^2.*(1-hside(phi_n(2:end-1,2:end-1),h))));
-
 F = mu*Length + nu*Area + lambda1*Inside + lambda2*Outside;
 end
