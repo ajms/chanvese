@@ -1,7 +1,7 @@
 close all;
 clear all;
 
-S = load('testimages.mat');
+S = load('old/testimages.mat');
 I = S.I1;
 
 x = -5:0.1:5;
@@ -34,6 +34,7 @@ colormap('gray');
 print(RandIm,'-deps','RandIm.eps');
 
 uiwait;
+
 i = min(I(:)):(max(I(:))-min(I(:)))/99:max(I(:));
 histd = histc(I(:),i);
 HistRandIm = figure;
@@ -67,27 +68,64 @@ colormap('gray');
 print(SmoothRandIm,'-dpsc','SmoothRandIm.eps');
 
 uiwait;
-
 i = min(Ismooth(:)):(max(Ismooth(:))-min(Ismooth(:)))/99:max(Ismooth(:));
 histd = histc(Ismooth(:),i);
-
 HistSmoothRandIm = figure;
 hold on;
 stairs(i,histd/sum(histd));
-
 hists = zeros(length(i),1);
 for k=1:length(i)
-    hists(k) = sum(sum(PW(i(k),0.001,Ismooth)));
+    hists(k) = sum(sum(PW(i(k),0.005,Ismooth)));
 end
-
 plot(i,hists/sum(hists),'Color',[1 0 0]);
 title('Histogram of smoothed image','interpreter','latex','FontSize',15);
 xlabel('Image intensity', 'interpreter', 'latex','FontSize', 15);
 ylabel('Frequency', 'interpreter', 'latex','FontSize', 15);
-hleg = legend('Normal histogram, 100 bins', 'Smooth histogram, $\beta = 0.001$');
+hleg = legend('Normal histogram, 100 bins', 'Smooth histogram, $\beta = 0.005$');
 set(hleg,'Interpreter', 'latex', 'location', 'NorthEast', 'FontSize', 15);
 hold off;
 print(HistSmoothRandIm,'-dpsc','HistSmoothRandIm.eps');
+
+uiwait;
+alphap = 5;
+x0 = 60;
+y0 = 60;
+Iloc = zeros(size(I));
+for k=1:size(I,1)
+    for j=1:size(I,2)
+        Iloc(k,j) = exp(-((k-x0)^2+(j-y0)^2)/(2*alphap^2));
+    end
+end
+LocSmoothRandIm = figure;
+hold on;
+a = imagesc(Ismooth);
+colormap('gray');
+b = contour(Iloc,3);
+axis tight;
+set(b,'facecolor','red','edgecolor','none');
+alpha(b,'color');
+title(['Window around $x0 = (80,80)$, $\alpha=10$ in smoothed image, ' ...
+       '$\sigma=4$'],'interpreter', 'latex','FontSize', 15);
+colorbar;
+set(gca,'YDir','Reverse');
+print(LocSmoothRandIm,'-dpsc','-painters','LocSmoothRandIm.eps');
+
+uiwait;
+
+i = min(Ismooth(:)):(max(Ismooth(:))-min(Ismooth(:)))/99:max(Ismooth(:));
+hists = zeros(length(i),1);
+for k=1:length(i)
+    hists(k) = sum(sum(PW(i(k),0.01,Ismooth).*Iloc));
+end
+
+LocHistSmoothRandIm = figure;
+plot(i,hists/sum(hists),'Color',[1 0 0]);
+title('Local histogram, $x0=(80,80)$, $\alpha = 5$','interpreter','latex','FontSize',15);
+xlabel('Image intensity', 'interpreter', 'latex','FontSize', 15);
+ylabel('Frequency', 'interpreter', 'latex','FontSize', 15);
+hleg = legend('Smooth histogram, $\beta = 0.01$');
+set(hleg,'Interpreter', 'latex', 'location', 'NorthEast', 'FontSize', 15);
+print(LocHistSmoothRandIm,'-dpsc','LocHistSmoothRandIm.eps');
 
 uiwait;
 

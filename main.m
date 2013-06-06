@@ -1,26 +1,26 @@
 close all;
 
 % Import image
-I = rgb2gray(imread('/path/to/image.jpg'));
+%I = rgb2gray(imread('/path/to/image.jpg'));
 
 % Parameters
 no = '0'; % number of image for figures
-maxit = 100; % maximal number of iterations
+maxit = 60; % maximal number of iterations
 h = 1; % space step size
-dt = 0.5; % time step size
+dt = 0.1; % time step size
 lambda1 = 1; % parameter weigting the inner segment
 lambda2 = 1; % parameter weighting the outer segment
-mu = 0.1*255^2; % parameter weighting the length regularization
+mu = 0.01*255^2; % parameter weighting the length regularization
 nu = 0; % parameter weighting the area regularization
-k = 100; % stopping criterion for difference in F
-l = 0.5*10^5; % stopping criterion for difference in phi
-m = 30; % size of circle for initial phi
+k = 40; % stopping criterion for difference in phi
+l = 10000; % stopping criterion for difference in F
+m = 50; % size of circle for initial phi
 [M, N] = size(I);
 
 % Initialize phi as a circle
 phi = -ones(M+2, N+2);
 [X Y] = meshgrid(1:M+2);
-Z = (X-50).^2 + (Y-50).^2; 
+Z = (X-floor(M/2)).^2 + (Y-floor(N/2)).^2; 
 phi(Z <= m^2) = 1;
 phi = init(phi);
 
@@ -32,6 +32,7 @@ colorbar();
 colormap('gray');
 contour(phi(2:end-1,2:end-1), [0 0], 'Color', [1 0 0],'LineWidth',3);
 axis tight;
+set(gca,'YDir','Reverse');
 print(initial,'-dpsc',strcat('I',no,'initcv.eps'));
 
 dphi = zeros(maxit,1);
@@ -61,6 +62,7 @@ colorbar();
 colormap('gray');
 contour(phi(2:end-1,2:end-1), [0 0], 'Color', [1 0 0],'LineWidth',3);
 axis tight;
+set(gca,'YDir','Reverse');
 hold off;
 print(seg,'-dpsc',strcat('I',no,'segcv.eps'));
 

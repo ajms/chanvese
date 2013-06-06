@@ -60,7 +60,7 @@ end
 
 % Solve linear system.bicgstab
 phi_nn = zeros(M+2,N+2);
-phi_nn(2:end-1,2:end-1) = reshape(gmres(P,b(:),10,1e-6,30),M,N);
+phi_nn(2:end-1,2:end-1) = reshape(gmres(P,b(:),10,1e-6,15),M,N);
 
 % Add boundary to n+1'st timestep
 phi_nn(1,2:end-1) = 4/3*phi_nn(2,2:end-1) - 1/3*phi_nn(3,2:end-1);
